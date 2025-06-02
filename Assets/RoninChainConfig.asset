@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8811e5f1df24f845861182fea0c3b15, type: 3}
+  m_Name: RoninChainConfig
+  m_EditorClassIdentifier: 
+  primaryRPC: https://api.roninchain.com/rpc
+  backupRPC: https://ronin.lgns.net/rpc
+  kongzVXContract: 0x241a81fc0d6692707dad2b5025a3a7cf2cf25acf
+  roninAPIKey: bS9xVtjS4fIsT10EoqkfHSO6GhwCpzBt
+  explorerAPIBase: https://api-gateway.skymavis.com

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9cbb438e07ee2c4e931d88cc70d125f, type: 3}
+  m_Name: All Characters
+  m_EditorClassIdentifier: 
+  characters:
+  - characterName: Player 1
+    character: {fileID: 3077122284084202292, guid: d7e8da921e06d4d4aa63eaac3f86e9bf, type: 3}
+    displayModel: {fileID: 9093129293297436734, guid: d7e8da921e06d4d4aa63eaac3f86e9bf, type: 3}
+    characterSprite: {fileID: 21300000, guid: 328ea6d4ec207c1418966bc9c1e246ff, type: 3}
+  - characterName: Player 2
+    character: {fileID: 3077122284084202292, guid: c32845ce0a4967c4dbe4957b266814e8, type: 3}
+    displayModel: {fileID: 9093129293297436734, guid: c32845ce0a4967c4dbe4957b266814e8, type: 3}
+    characterSprite: {fileID: 21300000, guid: 25aaac1c98e29c54e9b1b637a816f6d0, type: 3}
+  - characterName: Player 3
+    character: {fileID: 3077122284084202292, guid: aae2e3571bad4204d919b4142eb4b008, type: 3}
+    displayModel: {fileID: 9093129293297436734, guid: aae2e3571bad4204d919b4142eb4b008, type: 3}
+    characterSprite: {fileID: 21300000, guid: 3696525e7041b424783ed439393b66e0, type: 3}
+  - characterName: Player 4
+    character: {fileID: 3077122284084202292, guid: 7bc329f7982c9ea4989271fab088847b, type: 3}
+    displayModel: {fileID: 9093129293297436734, guid: 7bc329f7982c9ea4989271fab088847b, type: 3}
+    characterSprite: {fileID: 21300000, guid: f6ef53846891b9f40a7a77529f67abf9, type: 3}
+  - characterName: Player 5
+    character: {fileID: 3077122284084202292, guid: 70698782cf557b24e91b53780fedbe3a, type: 3}
+    displayModel: {fileID: 9093129293297436734, guid: 70698782cf557b24e91b53780fedbe3a, type: 3}
+    characterSprite: {fileID: 21300000, guid: 3b63b5a73985de64a805144d2936dc5c, type: 3}
+  - characterName: Player 6
+    character: {fileID: 3077122284084202292, guid: 7ec33db54d1fd7946bb09a125223a9ab, type: 3}
+    displayModel: {fileID: 9093129293297436734, guid: 7ec33db54d1fd7946bb09a125223a9ab, type: 3}
+    characterSprite: {fileID: 21300000, guid: b16d814ac8d52034a9c934e939becaeb, type: 3}
