@@ -86,7 +86,7 @@ GameObject:
   - component: {fileID: 9058402812904740322}
   - component: {fileID: 7942282979519908374}
   - component: {fileID: 2676948441569501210}
-  - component: {fileID: 4674821343561224963}
+  - component: {fileID: 123147201321531933}
   m_Layer: 5
   m_Name: CharacterSelectionPanel
   m_TagString: Untagged
@@ -166,7 +166,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4674821343561224963}
+      - m_Target: {fileID: 123147201321531933}
         m_TargetAssemblyTypeName: CharacterPortraitButton, Assembly-CSharp
         m_MethodName: OnClick
         m_Mode: 1
@@ -178,7 +178,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &4674821343561224963
+--- !u!114 &123147201321531933
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -187,6 +187,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 3957547441980982877}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bad146f7755e0a944a2c77e7d606ba77, type: 3}
+  m_Script: {fileID: 11500000, guid: c193639714de84548b9192cdbb5644e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
