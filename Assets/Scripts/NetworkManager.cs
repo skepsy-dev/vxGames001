@@ -4,19 +4,19 @@ using UnityEngine.SceneManagement;
 using TMPro;
 
 /// <summary>
-/// NetworkManager - Main Orchestration Controller
-/// Coordinates Web3Manager and PlayFabManager for complete authentication flow
-/// Simplified and focused on scene flow and UI coordination
+/// Updated NetworkManager with better user feedback and connection progress
 /// </summary>
 public class NetworkManager : MonoBehaviour
 {
     [Header("Configuration")]
-    [SerializeField] private int serverSceneIndex = 1; // Scene 1 = ServerRoomScene
+    [SerializeField] private int serverSceneIndex = 1;
 
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private UnityEngine.UI.Button connectWalletButton;
-    [SerializeField] private TextMeshProUGUI buttonText; // Add reference to button's text component
+    [SerializeField] private TextMeshProUGUI buttonText;
+    [SerializeField] private UnityEngine.UI.Slider progressSlider; // New: Progress bar
+    [SerializeField] private UnityEngine.UI.Button cancelButton; // New: Cancel button
 
     [Header("Manager References")]
     [SerializeField] private Web3Manager web3Manager;
@@ -52,13 +52,14 @@ public class NetworkManager : MonoBehaviour
     {
         SetupUI();
         SetupManagerEvents();
-        ClearStatusMessage(); // Start with clean status
+        ClearStatusMessage();
         SetButtonText(BUTTON_TEXT_CONNECT);
-        DebugLog("NetworkManager initialized - ready for one-click connection");
+        SetProgress(0f);
+        DebugLog("NetworkManager initialized with optimized connection flow");
     }
 
     /// <summary>
-    /// Setup UI elements
+    /// Setup UI elements including new progress indicators
     /// </summary>
     private void SetupUI()
     {
@@ -66,16 +67,31 @@ public class NetworkManager : MonoBehaviour
         {
             connectWalletButton.onClick.AddListener(StartConnectionProcess);
             
-            // Get button text component if not assigned
             if (buttonText == null && connectWalletButton.transform.childCount > 0)
             {
                 buttonText = connectWalletButton.GetComponentInChildren<TextMeshProUGUI>();
             }
         }
+        
+        // Setup cancel button
+        if (cancelButton != null)
+        {
+            cancelButton.onClick.AddListener(CancelConnection);
+            cancelButton.gameObject.SetActive(false); // Hidden by default
+        }
+        
+        // Setup progress slider
+        if (progressSlider != null)
+        {
+            progressSlider.gameObject.SetActive(false); // Hidden by default
+            progressSlider.minValue = 0f;
+            progressSlider.maxValue = 1f;
+            progressSlider.value = 0f;
+        }
     }
 
     /// <summary>
-    /// Setup event listeners for both managers
+    /// Setup event listeners including new progress events
     /// </summary>
     private void SetupManagerEvents()
     {
@@ -84,6 +100,7 @@ public class NetworkManager : MonoBehaviour
             web3Manager.OnWalletConnected += OnWalletConnected;
             web3Manager.OnNFTBalanceChecked += OnNFTBalanceChecked;
             web3Manager.OnWeb3Error += OnWeb3Error;
+            web3Manager.OnConnectionProgress += OnConnectionProgress; // New: Progress updates
         }
 
         if (playFabManager != null)
@@ -96,26 +113,23 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Start the complete connection process (ONE BUTTON DOES EVERYTHING)
+    /// Start the connection process with improved feedback
     /// </summary>
     public async void StartConnectionProcess()
     {
         if (isProcessing) return;
 
-        DebugLog("🚀 Starting complete connection process...");
+        DebugLog("🚀 Starting optimized connection process...");
         isProcessing = true;
 
-        // Reset state
         ResetConnectionState();
-
-        // Update UI to show connecting
-        SetButtonText(BUTTON_TEXT_CONNECTING);
-        ClearStatusMessage();
-        SetButtonsEnabled(false);
+        ShowConnectionUI(true);
+        SetProgress(0.1f, "Initializing connection...");
 
         try
         {
-            // Step 1: Connect Wallet
+            // Step 1: Connect Wallet (this is the slow part)
+            SetProgress(0.2f, "Connecting to wallet...");
             bool walletSuccess = await web3Manager.ConnectWallet();
 
             if (!walletSuccess)
@@ -124,14 +138,106 @@ public class NetworkManager : MonoBehaviour
                 return;
             }
 
-            // Wait for wallet connected event to proceed
-            // The flow continues in OnWalletConnected()
+            // Flow continues in OnWalletConnected()
         }
         catch (System.Exception ex)
         {
             DebugLog($"❌ Connection process failed: {ex.Message}");
             ShowError($"Connection failed: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Cancel the current connection attempt
+    /// </summary>
+    public void CancelConnection()
+    {
+        if (!isProcessing) return;
+        
+        DebugLog("🛑 User cancelled connection");
+        
+        // Cancel the web3 connection
+        if (web3Manager != null)
+        {
+            web3Manager.CancelConnection();
+        }
+        
+        ShowError("Connection cancelled");
+    }
+
+    /// <summary>
+    /// Show/hide connection UI elements
+    /// </summary>
+    private void ShowConnectionUI(bool connecting)
+    {
+        SetButtonText(connecting ? BUTTON_TEXT_CONNECTING : BUTTON_TEXT_CONNECT);
+        SetButtonsEnabled(!connecting);
+        
+        if (progressSlider != null)
+        {
+            progressSlider.gameObject.SetActive(connecting);
+        }
+        
+        if (cancelButton != null)
+        {
+            cancelButton.gameObject.SetActive(connecting);
+        }
+    }
+
+    /// <summary>
+    /// Update progress bar and status
+    /// </summary>
+    private void SetProgress(float progress, string status = "")
+    {
+        if (progressSlider != null)
+        {
+            progressSlider.value = progress;
+        }
+        
+        if (!string.IsNullOrEmpty(status))
+        {
+            ShowStatusMessage(status);
+        }
+        
+        DebugLog($"Progress: {progress * 100:F0}% - {status}");
+    }
+
+    /// <summary>
+    /// Handle connection progress updates from Web3Manager
+    /// </summary>
+    private void OnConnectionProgress(string progressMessage)
+    {
+        DebugLog($"Connection progress: {progressMessage}");
+        
+        // Update status text with current progress
+        if (statusText != null)
+        {
+            statusText.text = progressMessage;
+        }
+        
+        // Update progress bar based on message content
+        float progress = GetProgressFromMessage(progressMessage);
+        if (progressSlider != null)
+        {
+            progressSlider.value = progress;
+        }
+    }
+
+    /// <summary>
+    /// Estimate progress from connection messages
+    /// </summary>
+    private float GetProgressFromMessage(string message)
+    {
+        message = message.ToLower();
+        
+        if (message.Contains("quick reconnect")) return 0.3f;
+        if (message.Contains("walletconnect")) return 0.4f;
+        if (message.Contains("metamask")) return 0.5f;
+        if (message.Contains("coinbase")) return 0.6f;
+        if (message.Contains("attempt 2")) return 0.7f;
+        if (message.Contains("attempt 3")) return 0.8f;
+        
+        return 0.3f; // Default progress for wallet connection phase
     }
 
     /// <summary>
@@ -156,17 +262,17 @@ public class NetworkManager : MonoBehaviour
         walletConnected = true;
         currentWalletAddress = walletAddress;
         DebugLog($"✅ Wallet connected: {walletAddress}");
+        
+        SetProgress(0.5f, "Wallet connected! Connecting to PlayFab...");
 
-        // Step 2: Connect to PlayFab (silently)
+        // Step 2: Connect to PlayFab
         bool playFabSuccess = await playFabManager.ConnectToPlayFab(walletAddress);
 
         if (!playFabSuccess)
         {
-            ShowError("Connection failed - please try again");
+            ShowError("PlayFab connection failed - please try again");
             return;
         }
-
-        // The flow continues in OnPlayFabConnected()
     }
 
     /// <summary>
@@ -176,11 +282,11 @@ public class NetworkManager : MonoBehaviour
     {
         playFabConnected = true;
         DebugLog("✅ PlayFab connected");
+        
+        SetProgress(0.7f, "PlayFab connected! Checking NFTs...");
 
-        // Step 3: Check NFT Balance (silently)
+        // Step 3: Check NFT Balance
         int balance = await web3Manager.CheckNFTBalance();
-
-        // The flow continues in OnNFTBalanceChecked()
     }
 
     /// <summary>
@@ -191,24 +297,21 @@ public class NetworkManager : MonoBehaviour
         nftChecked = true;
         currentNFTBalance = balance;
         DebugLog($"✅ NFT balance: {balance}");
+        
+        SetProgress(0.85f, "NFTs checked! Verifying username...");
 
-        // Step 4: Check Username (silently)
+        // Step 4: Check Username
         bool hasUsername = await playFabManager.CheckUsernameStatus();
 
         if (!hasUsername)
         {
-            // Show username modal and wait for completion
+            SetProgress(0.9f, "Username required...");
             playFabManager.ShowUsernameModal();
-            // The flow continues in OnUsernameReady()
-        }
-        else
-        {
-            // Username already exists, flow continues in OnUsernameReady()
         }
     }
 
     /// <summary>
-    /// Event: Username is ready (either existing or newly created)
+    /// Event: Username is ready
     /// </summary>
     private async void OnUsernameReady(string username)
     {
@@ -216,21 +319,19 @@ public class NetworkManager : MonoBehaviour
         currentUsername = username;
         DebugLog($"✅ Username ready: {username}");
 
-        // Update button to show username
+        SetProgress(0.95f, "Finalizing...");
         SetButtonText(username);
 
-        // Step 5: Save final data and proceed
         await FinalizeAndProceed();
     }
 
     /// <summary>
-    /// Event: Username modal was shown (keep connecting state)
+    /// Event: Username modal was shown
     /// </summary>
     private void OnUsernameModalShown()
     {
-        // Keep button disabled and showing "Connecting..." while modal is shown
-        SetButtonsEnabled(false);
-        SetButtonText(BUTTON_TEXT_CONNECTING);
+        SetProgress(0.9f, "Please choose a username...");
+        ShowConnectionUI(true); // Keep connection UI active
     }
 
     /// <summary>
@@ -240,15 +341,18 @@ public class NetworkManager : MonoBehaviour
     {
         try
         {
-            // Save all player data to PlayFab (silently)
+            SetProgress(0.98f, "Saving player data...");
+            
             bool saveSuccess = await playFabManager.SavePlayerData(
                 currentWalletAddress,
                 currentUsername,
                 currentNFTBalance
             );
 
-            // Brief pause to show username, then proceed
-            await System.Threading.Tasks.Task.Delay(1500);
+            SetProgress(1.0f, "Complete! Loading game...");
+            
+            // Brief pause to show completion
+            await System.Threading.Tasks.Task.Delay(1000);
 
             LoadServerScene();
         }
@@ -260,17 +364,18 @@ public class NetworkManager : MonoBehaviour
         finally
         {
             isProcessing = false;
+            ShowConnectionUI(false);
         }
     }
 
     /// <summary>
-    /// Load the CMP Menu scene with Web3 player data
+    /// Load the game scene
     /// </summary>
     private void LoadServerScene()
     {
-        DebugLog($"🚀 Loading CMP Menu scene with Web3 player data");
+        DebugLog($"🚀 Loading game scene with Web3 player data");
 
-        // Store Web3 authentication data for CMP to use
+        // Store Web3 authentication data
         PlayerPrefs.SetString("Web3_Username", currentUsername);
         PlayerPrefs.SetString("Web3_WalletAddress", currentWalletAddress);
         PlayerPrefs.SetInt("Web3_NFTBalance", currentNFTBalance);
@@ -280,7 +385,6 @@ public class NetworkManager : MonoBehaviour
 
         DebugLog($"✅ Web3 data stored - Username: {currentUsername}, NFTs: {currentNFTBalance}");
 
-        // Load CMP's Menu scene instead of ServerRoomScene
         SceneManager.LoadScene("Menu");
     }
 
@@ -289,7 +393,7 @@ public class NetworkManager : MonoBehaviour
     /// </summary>
     private void OnWeb3Error(string errorMessage)
     {
-        ShowError("Wallet connection failed");
+        ShowError("Wallet connection failed - please try again");
     }
 
     /// <summary>
@@ -297,20 +401,16 @@ public class NetworkManager : MonoBehaviour
     /// </summary>
     private void OnPlayFabError(string errorMessage)
     {
-        // If error is about username requirement, reset everything
         if (errorMessage.Contains("Username is required"))
         {
             DebugLog("Username required - resetting connection");
 
-            // Disconnect wallet
             if (web3Manager != null && web3Manager.IsWalletConnected)
             {
                 web3Manager.DisconnectWallet();
             }
 
-            // Reset all state
             ResetConnectionState();
-
             ShowError("Username is required - please try again");
         }
         else
@@ -326,12 +426,8 @@ public class NetworkManager : MonoBehaviour
     {
         DebugLog($"❌ Error: {errorMessage}");
         
-        // Show error in status text
         ShowStatusMessage(errorMessage);
-        
-        // Reset button to allow retry
-        SetButtonText(BUTTON_TEXT_CONNECT);
-        SetButtonsEnabled(true);
+        ShowConnectionUI(false);
         isProcessing = false;
     }
 
@@ -347,7 +443,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Show status message (for errors only)
+    /// Show status message
     /// </summary>
     private void ShowStatusMessage(string message)
     {
@@ -394,6 +490,11 @@ public class NetworkManager : MonoBehaviour
         {
             connectWalletButton.onClick.RemoveListener(StartConnectionProcess);
         }
+        
+        if (cancelButton != null)
+        {
+            cancelButton.onClick.RemoveListener(CancelConnection);
+        }
 
         // Cleanup manager events
         if (web3Manager != null)
@@ -401,6 +502,7 @@ public class NetworkManager : MonoBehaviour
             web3Manager.OnWalletConnected -= OnWalletConnected;
             web3Manager.OnNFTBalanceChecked -= OnNFTBalanceChecked;
             web3Manager.OnWeb3Error -= OnWeb3Error;
+            web3Manager.OnConnectionProgress -= OnConnectionProgress;
         }
 
         if (playFabManager != null)
@@ -409,48 +511,6 @@ public class NetworkManager : MonoBehaviour
             playFabManager.OnUsernameReady -= OnUsernameReady;
             playFabManager.OnPlayFabError -= OnPlayFabError;
             playFabManager.OnUsernameModalShown -= OnUsernameModalShown;
-        }
-    }
-
-    /// <summary>
-    /// Static helper class for Web3 authentication data (for CMP integration)
-    /// </summary>
-    public static class Web3Integration
-    {
-        public static bool IsWeb3Authenticated()
-        {
-            return PlayerPrefs.GetString("Web3_AuthComplete", "false") == "true";
-        }
-        
-        public static string GetWeb3Username()
-        {
-            return PlayerPrefs.GetString("Web3_Username", "");
-        }
-        
-        public static string GetWeb3WalletAddress()
-        {
-            return PlayerPrefs.GetString("Web3_WalletAddress", "");
-        }
-        
-        public static int GetWeb3NFTBalance()
-        {
-            return PlayerPrefs.GetInt("Web3_NFTBalance", 0);
-        }
-        
-        public static bool HasWeb3NFTs()
-        {
-            return PlayerPrefs.GetInt("Web3_HasNFTs", 0) == 1;
-        }
-        
-        public static void ClearWeb3Data()
-        {
-            PlayerPrefs.DeleteKey("Web3_Username");
-            PlayerPrefs.DeleteKey("Web3_WalletAddress");
-            PlayerPrefs.DeleteKey("Web3_NFTBalance");
-            PlayerPrefs.DeleteKey("Web3_HasNFTs");
-            PlayerPrefs.DeleteKey("Web3_AuthComplete");
-            PlayerPrefs.Save();
-            Debug.Log("🧹 Web3 data cleared from PlayerPrefs");
         }
     }
 }
