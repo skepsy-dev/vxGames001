@@ -87,9 +87,17 @@ namespace AvocadoShark
 
         private void Awake()
         {
+            // IMPORTANT: Set the instance first thing
             if (Instance == null)
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject); // Optional: Keep it alive between scenes
+            }
+            else if (Instance != this)
+            {
+                // If another instance exists, destroy this one
+                Destroy(gameObject);
+                return;
             }
 
             room_search.onValueChanged.AddListener(OnSearchTextValueChange);
@@ -430,8 +438,21 @@ namespace AvocadoShark
             if (runner.GetPlayerObject(runner.LocalPlayer) != null)
                 return;
 
-            // Get random character from available prefabs
-            var selectedCharacter = characterScriptableObject.GetRandomCharacter();
+            // Check if this is initial spawn or a respawn based on time in scene
+            PlayerSelectionDetails selectedCharacter;
+            if (Time.timeSinceLevelLoad > 2f)
+            {
+                // Scene has been running for more than 2 seconds - use selected character
+                selectedCharacter = characterScriptableObject.GetSelectedCharacter();
+                Debug.Log($"🎯 Using SELECTED character (scene time: {Time.timeSinceLevelLoad:F1}s): {selectedCharacter.characterName}");
+            }
+            else
+            {
+                // Initial spawn - use random character
+                selectedCharacter = characterScriptableObject.GetRandomCharacter();
+                Debug.Log($"🎲 Initial spawn - using RANDOM character: {selectedCharacter.characterName}");
+            }
+
             var playerPrefab = selectedCharacter.character;
 
             // STORE the spawned character info for UI display
@@ -463,6 +484,125 @@ namespace AvocadoShark
             }
         }
 
+
+
+        // Add this method to FusionConnection.cs (around line 470, after SpawnPlayerCharacter)
+        public void SpawnSelectedCharacterAtPosition(Vector3 position)
+        {
+            if (Runner == null || !Runner.IsConnectedToServer)
+            {
+                Debug.LogError("Cannot spawn - no active runner");
+                return;
+            }
+
+            // Get the selected character from CharacterSO
+            var selectedCharacter = characterScriptableObject.GetSelectedCharacter();
+            var playerPrefab = selectedCharacter.character;
+
+            // Store the spawned character info
+            int characterIndex = characterScriptableObject.GetSelectedCharacterIndex;
+            PlayerPrefs.SetString("SpawnedCharacterName", selectedCharacter.characterName);
+            PlayerPrefs.SetInt("SpawnedCharacterIndex", characterIndex);
+
+            Debug.Log($"🎮 Spawning {selectedCharacter.characterName} at position: {position}");
+
+            // Spawn at the specified position
+            var playerObject = Runner.Spawn(playerPrefab, position);
+
+            // Set up voice manager (same as in SpawnPlayerCharacter)
+            _voiceManager.Init(playerObject.GetComponent<StarterAssetsInputs>(),
+                playerObject.GetComponent<PlayerWorldUIManager>());
+
+            Runner.SetPlayerObject(Runner.LocalPlayer, playerObject.Object);
+
+            Debug.Log($"✅ Player spawned: {selectedCharacter.characterName} at exact position");
+
+            // Update PFP
+            var inGameManager = FindFirstObjectByType<InGame_Manager>();
+            if (inGameManager != null)
+            {
+                inGameManager.RefreshCharacterPFP();
+            }
+        }
+
+
+
+        /// <summary>
+        /// Public method to respawn the local player with a new character
+        /// Called by CharacterSelector when player selects a new character
+        /// </summary>
+        public void RespawnLocalPlayerWithNewCharacter()
+        {
+            if (Runner == null || !Runner.IsConnectedToServer)
+            {
+                Debug.LogError("Cannot respawn - no active runner or not connected");
+                return;
+            }
+
+            var localPlayerObject = Runner.GetPlayerObject(Runner.LocalPlayer);
+            if (localPlayerObject != null)
+            {
+                // Store current position before despawn
+                UseCustomLocation = true;
+                CustomLocation = localPlayerObject.transform.position;
+
+                Debug.Log($"🔄 Despawning current player at position: {CustomLocation}");
+
+                // Despawn current player
+                Runner.Despawn(localPlayerObject);
+
+                // Spawn new character after a short delay
+                StartCoroutine(DelayedRespawn());
+            }
+            else
+            {
+                Debug.LogWarning("Local player object not found - spawning new character");
+                SpawnPlayerCharacter(Runner);
+            }
+        }
+
+        // ADD THIS COROUTINE RIGHT AFTER THE ABOVE METHOD
+        /// <summary>
+        /// Coroutine to handle delayed respawn after despawn
+        /// </summary>
+        private IEnumerator DelayedRespawn()
+        {
+            // Wait one frame for despawn to complete
+            yield return null;
+
+            Debug.Log("🎮 Spawning new character with updated selection...");
+
+            // Spawn the new character using the existing method
+            SpawnPlayerCharacter(Runner);
+
+            // Reset custom location after spawn
+            UseCustomLocation = false;
+        }
+
+        // OPTIONALLY: If you want automatic respawn checking, add this to Start() or Awake():
+        // StartCoroutine(CheckForPlayerRespawn());
+
+        // AND ADD THIS COROUTINE (OPTIONAL - for automatic respawn detection)
+        /// <summary>
+        /// Continuously check if local player needs respawn (optional)
+        /// </summary>
+        private IEnumerator CheckForPlayerRespawn()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(0.5f);
+
+                if (Runner != null && Runner.IsConnectedToServer && Runner.LocalPlayer != PlayerRef.None)
+                {
+                    var localPlayerObject = Runner.GetPlayerObject(Runner.LocalPlayer);
+                    if (localPlayerObject == null && hasEnteredGameScene)
+                    {
+                        Debug.Log("🔄 Local player has no object, auto-spawning...");
+                        SpawnPlayerCharacter(Runner);
+                    }
+                }
+            }
+        }
         private void CheckWeb3Authentication()
         {
             if (useWeb3Authentication && Web3Integration.IsWeb3Authenticated())

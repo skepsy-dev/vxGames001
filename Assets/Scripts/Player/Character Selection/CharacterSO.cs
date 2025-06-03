@@ -6,6 +6,7 @@ using UnityEngine;
 
 [CreateAssetMenu(menuName = "ScriptableObject/Character Selection")]
 public class CharacterSO : ScriptableObject
+
 {
     public List<PlayerSelectionDetails> characters = new List<PlayerSelectionDetails>();
     private const string Key = "Character Selection";

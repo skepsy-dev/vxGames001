@@ -5,6 +5,7 @@ using TMPro;
 using System;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using StarterAssets;
 
 namespace AvocadoShark
 {
@@ -19,8 +20,10 @@ namespace AvocadoShark
         [Networked] public int PositiveVotes { get; set; }
         [Networked] public int NegativeVotes { get; set; }
 
-        public int maxVoteTime = 15;
+        // NEW: Networked character selection
+        [Networked] public int SelectedCharacterIndex { get; set; }
 
+        public int maxVoteTime = 15;
 
         public bool isVoteInitiator = false;
         public Action<int> OnPositiveVotesChanged, OnNegativeVotesChanged, OnVoteTimeUpdated;
@@ -31,13 +34,33 @@ namespace AvocadoShark
         public static PlayerStats instance;
 
         public Action<string> OnPlayerStatsReady;
+
+        // Character changing references
+        private CharacterSO characterSO;
+        private ThirdPersonController currentController;
+
         public override void Spawned()
         {
             _changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
             GetComponent<PlayerWorldUIManager>().OnSpeaking += Speaking;
+
+            // Get CharacterSO reference ONCE
+            var characterSelector = FindFirstObjectByType<CharacterSelector>();
+            if (characterSelector != null)
+            {
+                characterSO = characterSelector.characterScriptableObject;
+            }
+
+            currentController = GetComponent<ThirdPersonController>();
+
             if (HasStateAuthority)
             {
                 PlayerName = FusionConnection.Instance._playerName;
+
+                // Initialize with current character selection
+                int currentCharacterIndex = PlayerPrefs.GetInt("SpawnedCharacterIndex", 0);
+                SelectedCharacterIndex = currentCharacterIndex;
+
                 OnPlayerStatsReady?.Invoke(PlayerName.ToString());
                 playerNameLabel.text = !HasStateAuthority ? PlayerName.ToString() : "";
                 Debug.Log(PlayerName + " Has state authority");
@@ -51,7 +74,6 @@ namespace AvocadoShark
                 SessionPlayers.instance.AddPlayer(this);
                 playerNameLabel.text = !HasStateAuthority ? PlayerName.ToString() : "";
             }
-
         }
 
         public override void Render()
@@ -76,6 +98,10 @@ namespace AvocadoShark
                         HandleChangeDetection<int>(nameof(NegativeVotes), previousBuffer, currentBuffer,
                             OnNegativeVote);
                         break;
+                    case nameof(SelectedCharacterIndex):
+                        HandleChangeDetection<int>(nameof(SelectedCharacterIndex), previousBuffer, currentBuffer,
+                            OnCharacterIndexChanged);
+                        break;
                 }
             }
         }
@@ -87,6 +113,7 @@ namespace AvocadoShark
             var (previous, current) = reader.Read(previousBuffer, currentBuffer);
             callback(previous, current);
         }
+
         private void Update()
         {
             if (!VoteKick)
@@ -102,25 +129,39 @@ namespace AvocadoShark
             }
         }
 
-        // public override void FixedUpdateNetwork()
-        // {
-        //     if (Object.HasStateAuthority)
-        //     {
-        //         if (VoteTime.Expired(Runner) && VoteKick)
-        //         {
-        //             VoteKick = false;
-        //         }
-        //     }
-        //
-        //     OnVoteTimeUpdated?.Invoke(Mathf.FloorToInt((float)VoteTime.RemainingTime(Runner)));
-        // }
-
         protected void UpdatePlayerName(NetworkString<_32> previous, NetworkString<_32> current)
         {
             SessionPlayers.instance.AddPlayer(this);
             playerNameLabel.text = !HasStateAuthority ? current.ToString() : "";
         }
 
+        // NEW: Handle character index changes from network (SINGLE DEFINITION)
+        private void OnCharacterIndexChanged(int previous, int current)
+        {
+            Debug.Log($"🎭 Character index changed from {previous} to {current}");
+
+            // Update local PlayerPrefs to match network state
+            if (characterSO != null && current >= 0 && current < characterSO.characters.Count)
+            {
+                var character = characterSO.characters[current];
+                PlayerPrefs.SetString("SpawnedCharacterName", character.characterName);
+                PlayerPrefs.SetInt("SpawnedCharacterIndex", current);
+
+                Debug.Log($"🔄 Updated character data: {character.characterName}");
+
+                // Update the lobby PFP immediately
+                var inGameManager = FindFirstObjectByType<InGame_Manager>();
+                if (inGameManager != null)
+                {
+                    inGameManager.RefreshCharacterPFP();
+                }
+
+                // NOTE: Real-time prefab swapping disabled for stability
+                // Character will change on next spawn instead
+            }
+        }
+
+        // Existing vote kick methods...
         public void InitializeVoteKick()
         {
             Debug.Log("InitializeVoteKick");
@@ -132,7 +173,6 @@ namespace AvocadoShark
 
             if (NotEnoughPlayers())
             {
-                // player count needs to be more than 2 for vote kick to work
                 Debug.Log("Not enough players for vote kick");
                 return;
             }
@@ -176,18 +216,9 @@ namespace AvocadoShark
             Debug.Log($"positive votes {PositiveVotes}");
             if (current)
             {
-                //if (!changed.Behaviour.HasStateAuthority) {
                 SessionPlayers.instance.AddVoteKick(this);
-                // if (HasStateAuthority)
-                //     AddNegativeVote();
-                // if (isVoteInitiator)
-                // {
-                //     isVoteInitiator = false;
-                //     RPC_AddPositiveVote();
-                // }
                 PositiveVotes = 0;
                 NegativeVotes = 0;
-                //}
             }
             else
             {
@@ -217,9 +248,6 @@ namespace AvocadoShark
         public int GetNegativeVotes()
         {
             return (SessionPlayers.instance.activePlayers.Count - PositiveVotes - 1);
-            // incase of 3 players 
-            // total count = 3
-            // criteria for votekick = 2 positive votes
         }
 
         public bool NotEnoughPlayers()
@@ -279,16 +307,15 @@ namespace AvocadoShark
             if (VoteKick)
             {
                 SessionPlayers.instance.RemoveVoteKick(this);
-                RPC_PlayerVoteResultMessage(
-                    $"Vote kick failed");
+                RPC_PlayerVoteResultMessage($"Vote kick failed");
             }
         }
 
+        // RPC Methods
         [Rpc(sources: RpcSources.Proxies, targets: RpcTargets.StateAuthority)]
         public void RPC_BeginVoteKick()
         {
             Debug.Log("RPC_BeginVoteKick");
-            // NegativeVotes = 1;                  // first negative vote for player who is being voted out
             VoteKick = true;
             VoteTime = TickTimer.CreateFromSeconds(Runner, maxVoteTime);
         }
@@ -313,18 +340,10 @@ namespace AvocadoShark
             NegativeVotes += 1;
         }
 
-        private void Speaking(bool value)
-        {
-            OnSpeaking?.Invoke(value);
-        }
-
-        // Add this method to PlayerStats.cs
+        // NEW: RPC for character changes (just updates display, not prefab)
         [Rpc(RpcSources.All, RpcTargets.All)]
         public void RPC_ChangeCharacter(int characterIndex)
         {
-            // Get the CharacterSO to access character data
-            var characterSO = FindFirstObjectByType<CharacterSelector>()?.characterScriptableObject;
-
             if (characterSO != null && characterIndex >= 0 && characterIndex < characterSO.characters.Count)
             {
                 var selectedCharacter = characterSO.characters[characterIndex];
@@ -344,6 +363,102 @@ namespace AvocadoShark
             }
         }
 
-    }   
+        // NEW: RPC for real-time character prefab changes
+        [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+        public void RPC_ChangeCharacterPrefab(int characterIndex)
+        {
+            if (Object.HasStateAuthority)
+            {
+                Debug.Log($"🌐 Authority received character change request: {characterIndex}");
+                SelectedCharacterIndex = characterIndex;
+            }
+        }
+
+        private void Speaking(bool value)
+        {
+            OnSpeaking?.Invoke(value);
+        }
+
+        // Add these methods to your existing PlayerStats.cs class:
+
+        // Add this RPC method to handle character respawn requests
+        [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+        public void RPC_RequestCharacterRespawn()
+        {
+            if (Object.HasStateAuthority)
+            {
+                Debug.Log($"🔄 Character respawn requested - despawning and respawning player");
+                StartCoroutine(RespawnWithNewCharacter());
+            }
+        }
+
+        // Coroutine to handle the respawn process
+        private IEnumerator RespawnWithNewCharacter()
+        {
+            // Store current position and rotation
+            Vector3 currentPosition = transform.position;
+            Quaternion currentRotation = transform.rotation;
+
+            // Get the FusionConnection instance
+            var fusionConnection = FindFirstObjectByType<FusionConnection>();
+            if (fusionConnection == null)
+            {
+                Debug.LogError("❌ FusionConnection not found!");
+                yield break;
+            }
+
+            // Despawn current player object
+            Debug.Log("🔴 Despawning current player...");
+            Runner.Despawn(Object);
+
+            // Wait a frame to ensure despawn completes
+            yield return null;
+
+            // Spawn new character with updated selection
+            Debug.Log("🟢 Spawning new character...");
+
+            // The CharacterSO will use the updated selection from PlayerPrefs
+            var characterSO = fusionConnection.characterScriptableObject;
+            var selectedCharacter = characterSO.GetSelectedCharacter();
+            var playerPrefab = selectedCharacter.character;
+
+            // Store the spawned character info
+            int characterIndex = characterSO.GetSelectedCharacterIndex;
+            PlayerPrefs.SetString("SpawnedCharacterName", selectedCharacter.characterName);
+            PlayerPrefs.SetInt("SpawnedCharacterIndex", characterIndex);
+
+            Debug.Log($"🎮 Spawning {selectedCharacter.characterName} at previous location");
+
+            // Spawn the new character
+            var playerObject = Runner.Spawn(playerPrefab, currentPosition, currentRotation);
+
+            // Set up voice manager if needed
+            var voiceManager = FindFirstObjectByType<VoiceManager>();
+            if (voiceManager != null)
+            {
+                var starterInputs = playerObject.GetComponent<StarterAssetsInputs>();
+                var worldUIManager = playerObject.GetComponent<PlayerWorldUIManager>();
+                if (starterInputs != null && worldUIManager != null)
+                {
+                    voiceManager.Init(starterInputs, worldUIManager);
+                }
+            }
+
+            // Set as player object
+            Runner.SetPlayerObject(Runner.LocalPlayer, playerObject.Object);
+
+            Debug.Log($"✅ Character respawned as: {selectedCharacter.characterName}");
+
+            // Update the lobby PFP
+            var inGameManager = FindFirstObjectByType<InGame_Manager>();
+            if (inGameManager != null)
+            {
+                // Small delay to ensure everything is set up
+                yield return new WaitForSeconds(0.1f);
+                inGameManager.RefreshCharacterPFP();
+            }
+        }
+
+    }
 }
 #endif

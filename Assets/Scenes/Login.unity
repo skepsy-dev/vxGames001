@@ -1627,7 +1627,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roninChainId: 2020
+  connectionTimeoutSeconds: 45
+  maxRetries: 2
+  enableWalletCaching: 1
+  forceMobileWalletConnect: 1
+  enableRoninOptimizations: 1
+  roninWalletCheckInterval: 2
   enableDebugLogs: 1
+  enablePerformanceLogging: 1
 --- !u!114 &1120553343
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1644,6 +1651,8 @@ MonoBehaviour:
   statusText: {fileID: 431494028}
   connectWalletButton: {fileID: 1142944516}
   buttonText: {fileID: 0}
+  progressSlider: {fileID: 0}
+  cancelButton: {fileID: 0}
   web3Manager: {fileID: 1120553342}
   playFabManager: {fileID: 1120553341}
   enableDebugLogs: 0

@@ -170,14 +170,20 @@ public class NetworkManager : MonoBehaviour
     /// </summary>
     private void ShowConnectionUI(bool connecting)
     {
-        SetButtonText(connecting ? BUTTON_TEXT_CONNECTING : BUTTON_TEXT_CONNECT);
+        // Only change button text if we don't have a username set
+        if (string.IsNullOrEmpty(currentUsername))
+        {
+            SetButtonText(connecting ? BUTTON_TEXT_CONNECTING : BUTTON_TEXT_CONNECT);
+        }
+        // If we have a username, keep it displayed
+
         SetButtonsEnabled(!connecting);
-        
+
         if (progressSlider != null)
         {
             progressSlider.gameObject.SetActive(connecting);
         }
-        
+
         if (cancelButton != null)
         {
             cancelButton.gameObject.SetActive(connecting);
@@ -385,7 +391,7 @@ public class NetworkManager : MonoBehaviour
 
         DebugLog($"✅ Web3 data stored - Username: {currentUsername}, NFTs: {currentNFTBalance}");
 
-        SceneManager.LoadScene("Menu");
+        SceneManager.LoadScene(1);
     }
 
     /// <summary>
