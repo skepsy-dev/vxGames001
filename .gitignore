@@ -2,10 +2,12 @@ echo "# Unity generated files
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
-/[Bb]uild/
 /[Bb]uilds/
 /[Ll]ogs/
 /UserSettings/
+
+# Allow WebGL builds in root Build folder
+# (The /Build/ pattern above is removed)
 
 # Visual Studio files
 *.csproj
@@ -14,4 +16,9 @@ echo "# Unity generated files
 
 # OS files
 .DS_Store
-Thumbs.db" > .gitignore
+Thumbs.db
+
+# Optional: If you want to be more specific, you can ignore builds but allow WebGL
+# /[Bb]uild/
+# !/Build/
+# !/build/" > .gitignore

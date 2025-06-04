@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | VX Games 1.1</title>
+    <title>Unity WebGL Player | {{{ PRODUCT_NAME }}}</title>
     <!-- <link rel="shortcut icon" href="TemplateData/favicon.ico"> -->
     <!-- <link rel="stylesheet" href="TemplateData/style.css"> -->
 </head>
 <body>
     <div id="unity-container" class="unity-desktop">
-        <canvas id="unity-canvas" width=1024 height=768></canvas>
+        <canvas id="unity-canvas" width={{{ WIDTH }}} height={{{ HEIGHT }}}></canvas>
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
             <div id="unity-progress-bar-empty">
@@ -20,7 +20,7 @@
         <div id="unity-footer">
             <div id="unity-webgl-logo"></div>
             <div id="unity-fullscreen-button"></div>
-            <div id="unity-build-title">VX Games 1.1</div>
+            <div id="unity-build-title">{{{ PRODUCT_NAME }}}</div>
         </div>
     </div>
 
@@ -105,15 +105,15 @@
         }
 
         var buildUrl = "Build";
-        var loaderUrl = buildUrl + "/VX Games WebGL.loader.js";
+        var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
         var config = {
-            dataUrl: buildUrl + "/VX Games WebGL.data",
-            frameworkUrl: buildUrl + "/VX Games WebGL.framework.js",
-            codeUrl: buildUrl + "/VX Games WebGL.wasm",
+            dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+            frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+            codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
             streamingAssetsUrl: "StreamingAssets",
-            companyName: "VXG Inc.",
-            productName: "VX Games 1.1",
-            productVersion: "0.1.0",
+            companyName: "{{{ COMPANY_NAME }}}",
+            productName: "{{{ PRODUCT_NAME }}}",
+            productVersion: "{{{ PRODUCT_VERSION }}}",
             showBanner: unityShowBanner
         };
 
@@ -132,8 +132,8 @@
             debugLog("📱 Mobile device detected", 'warning');
             unityShowBanner('WebGL builds are not supported on mobile devices.');
         } else {
-            canvas.style.width = "1024px";
-            canvas.style.height = "768px";
+            canvas.style.width = "{{{ WIDTH }}}px";
+            canvas.style.height = "{{{ HEIGHT }}}px";
             debugLog("🖥️ Desktop device detected", 'info');
         }
 
@@ -184,7 +184,7 @@
                 debugLog("🎉 Unity instance created successfully!", 'success');
                 
                 fullscreenButton.onclick = function() {
-                    document.makeFullscreen('unity-container');
+                    unityInstance.SetFullscreen(1);
                 };
 
                 // === ENHANCED RONIN WALLET FUNCTIONS WITH FULL DEBUG ===
