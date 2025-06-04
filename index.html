@@ -105,11 +105,11 @@
         }
 
         var buildUrl = "Build";
-        var loaderUrl = buildUrl + "/VX Games WebGL.loader.js";
+        var loaderUrl = buildUrl + "/VXGamesWebGL.loader.js";
         var config = {
-            dataUrl: buildUrl + "/VX Games WebGL.data",
-            frameworkUrl: buildUrl + "/VX Games WebGL.framework.js",
-            codeUrl: buildUrl + "/VX Games WebGL.wasm",
+            dataUrl: buildUrl + "/VXGamesWebGL.data",
+            frameworkUrl: buildUrl + "/VXGamesWebGL.framework.js",
+            codeUrl: buildUrl + "/VXGamesWebGL.wasm",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "VXG Inc.",
             productName: "VX Games 1.1",
@@ -170,7 +170,7 @@
         }, 500);
 
         var script = document.createElement("script");
-        script.src = loaderUrl;
+        script.src = buildUrl + "/VXGamesWebGL.loader.js";
         script.onload = function() {
             debugLog("📜 Unity loader script loaded successfully", 'success');
             
