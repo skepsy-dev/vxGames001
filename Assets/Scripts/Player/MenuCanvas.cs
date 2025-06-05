@@ -94,7 +94,7 @@ public class MenuCanvas : MonoBehaviour
         Debug.Log("✅ Web3 disconnected, returning to login scene");
 
         // Return to login scene
-        UnityEngine.SceneManagement.SceneManager.LoadScene("LoginScene");
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
 
     // ADD this Web3Integration class at the bottom of MenuCanvas.cs (outside the MenuCanvas class):

@@ -57,7 +57,7 @@ namespace AvocadoShark
                 Destroy(fusionManager);
             }
             Runner.Shutdown();
-            SceneManager.LoadScene("Menu");
+            SceneManager.LoadScene(1);
         }
         private float smoothedRTT = 0.0f;
         private void LateUpdate()
