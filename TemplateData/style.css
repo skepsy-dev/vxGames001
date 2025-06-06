@@ -13,12 +13,15 @@ body { padding: 0; margin: 0; overflow: hidden; }
     text-align: center;
 }
 
-/* VX Games Logo - using text for now, can replace with image */
+/* VX Games Logo */
 #unity-logo { 
-    color: white;
-    font-size: 32px;
-    font-family: Arial, sans-serif;
     margin-bottom: 20px;
+}
+
+#unity-logo img {
+    max-width: 500px; /* Adjust size as needed */
+    height: auto;
+    display: block;
 }
 
 /* Progress bar */
