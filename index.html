@@ -1,21 +1,17 @@
 <!DOCTYPE html>
 <html lang="en-us">
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>VX Games</title>
+    <title>Unity WebGL Player | VXGames</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
 </head>
-
 <body>
     <div id="unity-container" class="unity-desktop">
         <canvas id="unity-canvas" width=1920 height=1080></canvas>
         <div id="unity-loading-bar">
-            <div id="unity-logo">
-                <img src="WebArt/LogoPng/VXGlogoPfp_white.png" alt="VX GAMES">
-            </div>
+            <div id="unity-logo">VX GAMES</div>
             <div id="unity-progress-bar-empty">
                 <div id="unity-progress-bar-full"></div>
             </div>
@@ -46,7 +42,7 @@
             if (type == 'error') div.style = 'background: red; padding: 10px;';
             else {
                 if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-                setTimeout(function () {
+                setTimeout(function() {
                     warningBanner.removeChild(div);
                     updateBannerVisibility();
                 }, 5000);
@@ -57,7 +53,7 @@
         var buildUrl = "Build";
         var loaderUrl = buildUrl + "/e52aa82ee71e5fc29b740fb6399ac7a8.loader.js";
         var config = {
-            dataUrl: buildUrl + "/3c3d3a990e7b4c143006d460072e981a.data.gz",
+            dataUrl: buildUrl + "/788d59db58b2027123c3338f588ee2b0.data.gz",
             frameworkUrl: buildUrl + "/18b32e22382affb114f9ec4ecfc29c67.framework.js.gz",
             codeUrl: buildUrl + "/8bd737d86df72ae07ff07fd12480b38c.wasm.gz",
             streamingAssetsUrl: "StreamingAssets",
@@ -77,20 +73,20 @@
             config.devicePixelRatio = 1;
             unityShowBanner('WebGL builds are not supported on mobile devices.');
         } else {
-            canvas.style.width = "100%";
-            canvas.style.height = "100%";
+            canvas.style.width = "1920px";
+            canvas.style.height = "1080px";
         }
 
         loadingBar.style.display = "block";
 
         var script = document.createElement("script");
         script.src = loaderUrl;
-        script.onload = function () {
-            createUnityInstance(canvas, config, function (progress) {
+        script.onload = function() {
+            createUnityInstance(canvas, config, function(progress) {
                 progressBarFull.style.width = 100 * progress + "%";
-            }).then(function (unityInstance) {
+            }).then(function(unityInstance) {
                 loadingBar.style.display = "none";
-                fullscreenButton.onclick = function () {
+                fullscreenButton.onclick = function() {
                     document.makeFullscreen('unity-container');
                 };
 
@@ -98,21 +94,21 @@
                 window.unityGame = unityInstance;
 
                 // === RONIN WALLET FUNCTIONS (Clean version without debug) ===
-                window.DetectRoninWallet = function () {
-                    return (typeof window.ronin !== 'undefined' && window.ronin.provider) ||
-                        (typeof window.ethereum !== 'undefined' && window.ethereum.isRonin);
+                window.DetectRoninWallet = function() {
+                    return (typeof window.ronin !== 'undefined' && window.ronin.provider) || 
+                           (typeof window.ethereum !== 'undefined' && window.ethereum.isRonin);
                 };
-
-                window.ConnectRoninWallet = function () {
+                
+                window.ConnectRoninWallet = function() {
                     const provider = window.ronin?.provider || (window.ethereum?.isRonin ? window.ethereum : null);
-
+                    
                     if (!provider) {
                         unityInstance.SendMessage('RoninJSBridge', 'OnWalletConnectionFailed', 'No Ronin provider available');
                         return;
                     }
-
-                    provider.request({ method: 'eth_requestAccounts' })
-                        .then(function (accounts) {
+                    
+                    provider.request({method: 'eth_requestAccounts'})
+                        .then(function(accounts) {
                             if (accounts.length > 0) {
                                 window.roninAddress = accounts[0];
                                 unityInstance.SendMessage('RoninJSBridge', 'OnWalletConnectionSuccess', accounts[0]);
@@ -120,7 +116,7 @@
                                 unityInstance.SendMessage('RoninJSBridge', 'OnWalletConnectionFailed', 'No accounts returned');
                             }
                         })
-                        .catch(function (error) {
+                        .catch(function(error) {
                             if (error.code === 4001) {
                                 unityInstance.SendMessage('RoninJSBridge', 'OnWalletConnectionRejected');
                             } else {
@@ -128,21 +124,20 @@
                             }
                         });
                 };
-
-                window.GetRoninAddress = function () {
+                
+                window.GetRoninAddress = function() {
                     return window.roninAddress || '';
                 };
-
-                window.IsRoninConnected = function () {
+                
+                window.IsRoninConnected = function() {
                     return !!window.roninAddress;
                 };
 
-            }).catch(function (message) {
+            }).catch(function(message) {
                 alert(message);
             });
         };
         document.body.appendChild(script);
     </script>
 </body>
-
 </html>
