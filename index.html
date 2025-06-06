@@ -87,7 +87,7 @@
             }).then(function(unityInstance) {
                 loadingBar.style.display = "none";
                 fullscreenButton.onclick = function() {
-                    document.makeFullscreen('unity-container');
+                    unityInstance.SetFullscreen(1);
                 };
 
                 // Store Unity instance globally for external access
