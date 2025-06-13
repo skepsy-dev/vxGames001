@@ -47,113 +47,71 @@ public class Web3Manager : MonoBehaviour
     /// Connect wallet - try multiple approaches to avoid IndexOutOfRangeException
     /// </summary>
     public async Task<bool> ConnectWallet()
+{
+    DebugLog("🎯 Starting wallet connection...");
+
+    try
     {
-        DebugLog("🎯 Starting wallet connection...");
-
-        try
+        #if UNITY_WEBGL && !UNITY_EDITOR
+        // Use Ronin browser extension for instant connection
+        DebugLog("📱 Using Ronin browser extension...");
+        OnConnectionProgress?.Invoke("Connecting to Ronin Wallet...");
+        
+        // Set up a callback to handle the connection
+        RoninJSBridge.Instance.SetWeb3Manager(this);
+        RoninJSBridge.Instance.ConnectWallet();
+        
+        // Return true to indicate connection process started
+        // The actual connection will complete via callback
+        return await Task.FromResult(true);
+        #else
+        // Keep your existing WalletConnect code for editor testing
+        OnConnectionProgress?.Invoke("Opening wallet selection...");
+        
+        // Your existing code here...
+        var walletOptions = new WalletOptions(
+            WalletProvider.WalletConnectWallet, 
+            new BigInteger(1)
+        );
+        
+        connectedWallet = await ThirdwebManager.Instance.ConnectWallet(walletOptions);
+        
+        if (connectedWallet != null)
         {
-            OnConnectionProgress?.Invoke("Opening wallet selection...");
-
-            // Method 1: Try with Ethereum mainnet (most common)
-            DebugLog("📱 Trying Ethereum mainnet...");
-            
-            var walletOptions = new WalletOptions(
-                WalletProvider.WalletConnectWallet, 
-                new BigInteger(1) // Ethereum mainnet
-            );
-            
-            connectedWallet = await ThirdwebManager.Instance.ConnectWallet(walletOptions);
-
-            if (connectedWallet != null)
-            {
-                walletAddress = await connectedWallet.GetAddress();
-                isWalletConnected = true;
-
-                DebugLog($"✅ Wallet connected: {walletAddress}");
-                OnWalletConnected?.Invoke(walletAddress);
-                
-                return true;
-            }
-            else
-            {
-                throw new Exception("Wallet connection returned null");
-            }
+            walletAddress = await connectedWallet.GetAddress();
+            isWalletConnected = true;
+            DebugLog($"✅ Wallet connected: {walletAddress}");
+            OnWalletConnected?.Invoke(walletAddress);
+            return true;
         }
-        catch (Exception ex)
-        {
-            DebugLog($"❌ Ethereum connection failed: {ex.Message}");
-            
-            // Method 2: Try with Polygon
-            try
-            {
-                DebugLog("📱 Trying Polygon...");
-                OnConnectionProgress?.Invoke("Trying Polygon network...");
-                
-                var polygonOptions = new WalletOptions(
-                    WalletProvider.WalletConnectWallet, 
-                    new BigInteger(137) // Polygon
-                );
-                
-                connectedWallet = await ThirdwebManager.Instance.ConnectWallet(polygonOptions);
-                
-                if (connectedWallet != null)
-                {
-                    walletAddress = await connectedWallet.GetAddress();
-                    isWalletConnected = true;
-
-                    DebugLog($"✅ Wallet connected (Polygon): {walletAddress}");
-                    OnWalletConnected?.Invoke(walletAddress);
-                    
-                    return true;
-                }
-            }
-            catch (Exception ex2)
-            {
-                DebugLog($"❌ Polygon connection failed: {ex2.Message}");
-            }
-            
-            // Method 3: Try with Arbitrum
-            try
-            {
-                DebugLog("📱 Trying Arbitrum...");
-                OnConnectionProgress?.Invoke("Trying Arbitrum network...");
-                
-                var arbitrumOptions = new WalletOptions(
-                    WalletProvider.WalletConnectWallet, 
-                    new BigInteger(42161) // Arbitrum
-                );
-                
-                connectedWallet = await ThirdwebManager.Instance.ConnectWallet(arbitrumOptions);
-                
-                if (connectedWallet != null)
-                {
-                    walletAddress = await connectedWallet.GetAddress();
-                    isWalletConnected = true;
-
-                    DebugLog($"✅ Wallet connected (Arbitrum): {walletAddress}");
-                    OnWalletConnected?.Invoke(walletAddress);
-                    
-                    return true;
-                }
-            }
-            catch (Exception ex3)
-            {
-                DebugLog($"❌ Arbitrum connection failed: {ex3.Message}");
-            }
-            
-            // All methods failed
-            if (IsUserCancellation(ex))
-            {
-                OnWeb3Error?.Invoke("Connection cancelled by user");
-            }
-            else
-            {
-                OnWeb3Error?.Invoke($"All connection methods failed. Please check WalletConnect configuration.");
-            }
-            
-            return false;
-        }
+        
+        // ... rest of your existing fallback code
+        return false;
+        #endif
     }
+    catch (Exception ex)
+    {
+        DebugLog($"❌ Connection error: {ex.Message}");
+        OnWeb3Error?.Invoke($"Connection failed: {ex.Message}");
+        return false;
+    }
+}
+// NEW: Add this callback method
+public void OnRoninExtensionConnected(string address)
+    {
+        walletAddress = address;
+        isWalletConnected = true;
+
+        DebugLog($"✅ Wallet connected via Ronin extension: {address}");
+        OnWalletConnected?.Invoke(address);
+    }
+
+// NEW: Add this error callback
+public void OnRoninExtensionError(string error)
+{
+    DebugLog($"❌ Ronin extension error: {error}");
+    OnWeb3Error?.Invoke(error);
+}
 
     /// <summary>
     /// Check NFT balance using existing KONGZ VX contract call
