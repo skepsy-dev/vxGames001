@@ -118,6 +118,18 @@ namespace AvocadoShark
             else if (region_n == 5) region = "us";
             region_select.value = region_n;
 
+            // Add to FusionConnection.Awake() after region setup:
+            var fusionSettings = Resources.Load<PhotonAppSettings>("PhotonAppSettings");
+            if (fusionSettings != null)
+            {
+#if UNITY_EDITOR
+                Debug.Log($"[FUSION DEBUG] Loaded from: {UnityEditor.AssetDatabase.GetAssetPath(fusionSettings)}");
+#endif
+                Debug.Log($"[FUSION DEBUG] Protocol: {fusionSettings.AppSettings.Protocol}");
+                Debug.Log($"[FUSION DEBUG] Port: {fusionSettings.AppSettings.Port}");
+                Debug.Log($"[FUSION DEBUG] EnableProtocolFallback: {fusionSettings.AppSettings.EnableProtocolFallback}");
+            }
+
             PhotonAppSettings settings = Resources.Load<PhotonAppSettings>("PhotonAppSettings");
 
             // NEW: Force WebGL settings BEFORE setting region
