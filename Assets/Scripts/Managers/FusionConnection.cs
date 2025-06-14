@@ -117,7 +117,17 @@ namespace AvocadoShark
             else if (region_n == 4) region = "kr";
             else if (region_n == 5) region = "us";
             region_select.value = region_n;
+
             PhotonAppSettings settings = Resources.Load<PhotonAppSettings>("PhotonAppSettings");
+
+            // NEW: Force WebGL settings BEFORE setting region
+#if UNITY_WEBGL && !UNITY_EDITOR
+    settings.AppSettings.Protocol = ExitGames.Client.Photon.ConnectionProtocol.WebSocketSecure;
+    settings.AppSettings.Port = 443;
+    settings.AppSettings.EnableProtocolFallback = false;
+    Debug.Log($"[FusionConnection] WebGL detected - forcing WebSocketSecure protocol on port 443");
+#endif
+
             settings.AppSettings.FixedRegion = region;
 
             // NEW: Check for Web3 authentication and auto-setup
@@ -128,6 +138,14 @@ namespace AvocadoShark
         {
             string region = null;
             var settings = Resources.Load<PhotonAppSettings>("PhotonAppSettings");
+
+            // NEW: Ensure WebGL settings persist
+#if UNITY_WEBGL && !UNITY_EDITOR
+    settings.AppSettings.Protocol = ExitGames.Client.Photon.ConnectionProtocol.WebSocketSecure;
+    settings.AppSettings.Port = 443;
+    settings.AppSettings.EnableProtocolFallback = false;
+#endif
+
             region = regionNum switch
             {
                 0 => "",
@@ -141,6 +159,7 @@ namespace AvocadoShark
             settings.AppSettings.FixedRegion = region;
             PlayerPrefs.SetInt("region", regionNum);
         }
+
         public void RefreshRoomList()
         {
             InitialRoomListSetup();

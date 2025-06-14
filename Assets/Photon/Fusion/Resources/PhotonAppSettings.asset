@@ -20,10 +20,10 @@ MonoBehaviour:
     UseNameServer: 1
     FixedRegion: 
     Server: 
-    Port: 0
+    Port: 443
     ProxyServer: 
-    Protocol: 0
-    EnableProtocolFallback: 1
+    Protocol: 5
+    EnableProtocolFallback: 0
     AuthMode: 0
     EnableLobbyStatistics: 0
     encryptionMode: 0
