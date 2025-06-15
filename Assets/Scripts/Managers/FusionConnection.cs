@@ -269,6 +269,7 @@ namespace AvocadoShark
 
         public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
         {
+             Debug.Log($"[FusionConnection] OnSessionListUpdated with {sessionList.Count} sessions at {Time.time}");
             if (initialRoomListPopulated == false)
             {
                 //StartCoroutine(AutoRefreshRoomList());
@@ -354,7 +355,10 @@ namespace AvocadoShark
             mainObject.SetActive(false);
             characterselectionobject.SetActive(false);
             SetUpComponents();
+
+            Debug.Log($"[FusionConnection] About to join session lobby at {Time.time}");
             Runner.JoinSessionLobby(SessionLobby.Shared);
+            Debug.Log($"[FusionConnection] JoinSessionLobby called at {Time.time}");
         }
         private void SetUpComponents()
         {
@@ -728,6 +732,7 @@ namespace AvocadoShark
 
         public void OnConnectedToServer(NetworkRunner runner)
         {
+            Debug.Log($"[FusionConnection] OnConnectedToServer at {Time.time}");
             Debug.Log("OnConnectedToServer");
             isConnected = true;
         }
