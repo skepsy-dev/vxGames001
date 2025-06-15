@@ -13,6 +13,7 @@ using Photon.Voice.Unity;
 using StarterAssets;
 using Fusion.Photon.Realtime;
 using UnityEngine.Serialization;
+using ExitGames.Client.Photon;
 
 namespace AvocadoShark
 {
@@ -399,6 +400,18 @@ namespace AvocadoShark
 
             Debug.Log($"🚀 Joining room with scene index: {buildIndex}");
 
+            // ADD THIS: Force WebSocket for WebGL
+#if UNITY_WEBGL && !UNITY_EDITOR
+    // Force the global PhotonAppSettings to use WebSocketSecure
+    var appSettings = Fusion.Photon.Realtime.PhotonAppSettings.Global;
+    if (appSettings != null)
+    {
+        appSettings.AppSettings.Protocol = ExitGames.Client.Photon.ConnectionProtocol.WebSocketSecure;
+        appSettings.AppSettings.Port = 443;
+        Debug.Log("🔧 Forced WebSocketSecure protocol for WebGL");
+    }
+#endif
+
             var result = await Runner.StartGame(new StartGameArgs()
             {
                 GameMode = GameMode.Shared,
@@ -447,6 +460,18 @@ namespace AvocadoShark
             }
 
             Debug.Log($"🚀 Creating room with scene index: {buildIndex}");
+
+            // ADD THIS: Force WebSocket for WebGL
+#if UNITY_WEBGL && !UNITY_EDITOR
+    // Force the global PhotonAppSettings to use WebSocketSecure
+    var appSettings = Fusion.Photon.Realtime.PhotonAppSettings.Global;
+    if (appSettings != null)
+    {
+        appSettings.AppSettings.Protocol = ExitGames.Client.Photon.ConnectionProtocol.WebSocketSecure;
+        appSettings.AppSettings.Port = 443;
+        Debug.Log("🔧 Forced WebSocketSecure protocol for WebGL");
+    }
+#endif
 
             var result = await Runner.StartGame(new StartGameArgs()
             {

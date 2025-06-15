@@ -18,7 +18,7 @@ MonoBehaviour:
     AppIdVoice: e963e343-814c-4c1a-ac65-9a2f78f3b288
     AppVersion: 
     UseNameServer: 1
-    FixedRegion: 
+    FixedRegion: us
     Server: 
     Port: 443
     ProxyServer: 
