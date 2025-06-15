@@ -4,7 +4,7 @@ using UnityEngine;
 public class RoninChainConfig : ScriptableObject
 {
     [Header("Ronin Network Configuration")]
-    public const int CHAIN_ID = 2020;
+    public const int CHAIN_ID = 2020; 
     public const string CHAIN_NAME = "Ronin";
     public const string NATIVE_CURRENCY_NAME = "RON";
     public const string NATIVE_CURRENCY_SYMBOL = "RON";

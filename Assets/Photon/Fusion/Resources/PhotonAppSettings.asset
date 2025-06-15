@@ -17,7 +17,7 @@ MonoBehaviour:
     AppIdChat: 56c73918-2240-489b-b1e5-4e2d119a975a
     AppIdVoice: e963e343-814c-4c1a-ac65-9a2f78f3b288
     AppVersion: 
-    UseNameServer: 1
+    UseNameServer: 0
     FixedRegion: us
     Server: 
     Port: 443
