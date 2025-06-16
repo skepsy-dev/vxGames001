@@ -269,7 +269,7 @@ namespace AvocadoShark
 
         public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
         {
-             Debug.Log($"[FusionConnection] OnSessionListUpdated with {sessionList.Count} sessions at {Time.time}");
+            Debug.Log($"[FusionConnection] OnSessionListUpdated with {sessionList.Count} sessions at {Time.time}");
             if (initialRoomListPopulated == false)
             {
                 //StartCoroutine(AutoRefreshRoomList());
@@ -379,8 +379,8 @@ namespace AvocadoShark
                 string scenePath = SceneUtility.GetScenePathByBuildIndex(i);
                 string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
 
-                // Look for "Lobby" instead of "Game"
-                if (sceneName == "Lobby" || sceneName == "Game")
+                // Look for "Server", "Lobby", or "Game"
+                if (sceneName == "Server" || sceneName == "Lobby" || sceneName == "Game")
                 {
                     buildIndex = i;
                     Debug.Log($"🎯 Found game scene: {sceneName} at index {i}");
@@ -391,7 +391,7 @@ namespace AvocadoShark
             // Safety check
             if (buildIndex == -1)
             {
-                Debug.LogError("❌ Could not find Lobby or Game scene in build settings!");
+                Debug.LogError("❌ Could not find Server, Lobby or Game scene in build settings!");
                 popup.ShowPopup("Scene not found in build settings");
                 return;
             }
@@ -422,8 +422,10 @@ namespace AvocadoShark
                 SessionName = sessionName,
                 Scene = SceneRef.FromIndex(buildIndex),
             });
+
             if (result.Ok)
                 return;
+
             popup.ShowPopup(result.ShutdownReason.ToString());
         }
 
