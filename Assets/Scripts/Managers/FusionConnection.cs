@@ -357,7 +357,7 @@ namespace AvocadoShark
             SetUpComponents();
 
             Debug.Log($"[FusionConnection] About to join session lobby at {Time.time}");
-            Runner.JoinSessionLobby(SessionLobby.Shared);
+            // Runner.JoinSessionLobby(SessionLobby.Shared);
             Debug.Log($"[FusionConnection] JoinSessionLobby called at {Time.time}");
         }
         private void SetUpComponents()
@@ -706,7 +706,7 @@ namespace AvocadoShark
 
                 // Auto-connect immediately without loading screen
                 SetUpComponents();
-                Runner.JoinSessionLobby(SessionLobby.Shared);
+                // Runner.JoinSessionLobby(SessionLobby.Shared);
 
                 Debug.Log("🚀 Web3 user connected instantly - no delays!");
             }
